@@ -9,20 +9,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type TTSService struct {
+type ImagenService struct {
 	redisClient *redis.Client
 	ctx         context.Context
 }
 
-func NewTTSService(redisClient *redis.Client) *TTSService {
-	return &TTSService{
+func NewImagenService(redisClient *redis.Client) *ImagenService {
+	return &ImagenService{
 		redisClient: redisClient,
 		ctx:         context.Background(),
 	}
 }
 
-func (s *TTSService) CreateTask(task *models.TTSTask) error {
-	taskID := fmt.Sprintf("tts:task:%d", task.ID)
+func (s *ImagenService) CreateTask(task *models.ImagenTask) error {
+	taskID := fmt.Sprintf("imagen:task:%d", task.ID)
 	taskData, err := json.Marshal(task)
 	if err != nil {
 		return err
@@ -33,16 +33,16 @@ func (s *TTSService) CreateTask(task *models.TTSTask) error {
 		return err
 	}
 
-	return s.redisClient.LPush(s.ctx, "tts_task_queue", taskID).Err()
+	return s.redisClient.LPush(s.ctx, "imagen_task_queue", taskID).Err()
 }
 
-func (s *TTSService) GetTask(taskID string) (*models.TTSTask, error) {
+func (s *ImagenService) GetTask(taskID string) (*models.ImagenTask, error) {
 	taskData, err := s.redisClient.Get(s.ctx, taskID).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	var task models.TTSTask
+	var task models.ImagenTask
 	err = json.Unmarshal([]byte(taskData), &task)
 	if err != nil {
 		return nil, err
@@ -51,13 +51,13 @@ func (s *TTSService) GetTask(taskID string) (*models.TTSTask, error) {
 	return &task, nil
 }
 
-func (s *TTSService) ListTasks() ([]*models.TTSTask, error) {
-	taskIDs, err := s.redisClient.LRange(s.ctx, "tts_task_queue", 0, -1).Result()
+func (s *ImagenService) ListTasks() ([]*models.ImagenTask, error) {
+	taskIDs, err := s.redisClient.LRange(s.ctx, "imagen_task_queue", 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	var tasks []*models.TTSTask
+	var tasks []*models.ImagenTask
 	for _, taskID := range taskIDs {
 		task, err := s.GetTask(taskID)
 		if err != nil {
