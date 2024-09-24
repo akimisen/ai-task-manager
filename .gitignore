@@ -1,0 +1,84 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+
+# Go workspace file
+go.work
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Build output
+bin/
+build/
+
+# Environment variables
+.env
+
+# Database files
+*.db
+*.sqlite
+
+# Generated files
+*.generated.go
+
+# Audio files (if you don't want to track them)
+*.wav
+*.mp3
+*.ogg
+
+# Image files (if you don't want to track them)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+
+# Video files (if you don't want to track them)
+*.mp4
+*.avi
+*.mov
+
+# Large media files (adjust size as needed)
+*.mp3
+*.wav
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
