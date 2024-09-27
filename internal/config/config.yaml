@@ -1,0 +1,6 @@
+tts:
+  url: "http://127.0.0.1:9880"
+  config_path: "GPT_SoVITS/configs/tts_infer.yaml"
+  default_ref_audio: "path/to/default/reference/audio.wav"
+  default_text_lang: "zh"
+  default_prompt_lang: "zh"

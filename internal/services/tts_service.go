@@ -1,70 +1,115 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-
-	"github.com/akimisen/ai-task-manager/internal/models"
-	"github.com/redis/go-redis/v9"
+    "ai-task-manager/internal/models"
+    "ai-task-manager/internal/queue"
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "io"
+	"os"
+    "path/filepath"
+    "net/http"
+    "github.com/spf13/viper"
 )
 
 type TTSService struct {
-	redisClient *redis.Client
-	ctx         context.Context
+    queue queue.TaskQueue
+    ttsURL string
+    defaultRefAudio string
+    defaultTextLang string
+    defaultPromptLang string
 }
 
-func NewTTSService(redisClient *redis.Client) *TTSService {
-	return &TTSService{
-		redisClient: redisClient,
-		ctx:         context.Background(),
-	}
+func NewTTSService(q queue.TaskQueue, ttsURL string) *TTSService {
+    return &TTSService{
+        taskQueue: q,
+		ttsURL: ttsURL,
+    }
 }
 
-func (s *TTSService) CreateTask(task *models.TTSTask) error {
-	taskID := fmt.Sprintf("tts:task:%d", task.ID)
-	taskData, err := json.Marshal(task)
-	if err != nil {
-		return err
-	}
+func (s *TTSService) CreateTask(text string) (*models.TTSTask, error) {
+    task := &models.TTSTask{
+        ID:     generateUniqueID(), // 实现一个生成唯一ID的函数
+        Type:   models.TaskTypeTTS,
+        Status: "pending",
+        Text:   text,
+    }
 
-	err = s.redisClient.Set(s.ctx, taskID, taskData, 0).Err()
-	if err != nil {
-		return err
-	}
+    err := s.queue.Push(task)
+    if err != nil {
+        return nil, err
+    }
 
-	return s.redisClient.LPush(s.ctx, "tts_task_queue", taskID).Err()
+    // 异步调用TTS API
+    go s.processTTSTask(task)
+
+    return task, nil
 }
 
-func (s *TTSService) GetTask(taskID string) (*models.TTSTask, error) {
-	taskData, err := s.redisClient.Get(s.ctx, taskID).Result()
-	if err != nil {
-		return nil, err
-	}
+func (s *TTSService) processTTSTask(task *models.TTSTask) {
+    task.Status = "processing"
+    s.queue.Push(task) // 更新任务状态
 
-	var task models.TTSTask
-	err = json.Unmarshal([]byte(taskData), &task)
-	if err != nil {
-		return nil, err
-	}
+    // 准备请求数据
+    requestBody, _ := json.Marshal(map[string]string{
+        "text": task.Text,
+		"text_lang": s.defaultTextLang,
+        // "ref_audio_path": s.defaultRefAudio,
+        "prompt_lang": s.defaultPromptLang,
+        "streaming_mode": false,
+    })
 
-	return &task, nil
+    // 调用第三方 TTS API
+    resp, err := http.Post(s.ttsURL, "application/json", bytes.NewBuffer(requestBody))
+    if err != nil {
+        task.Status = "failed"
+        s.queue.Push(task)
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode == http.StatusOK {
+        // 读取音频数据
+        audioData, err := io.ReadAll(resp.Body)
+        if err != nil {
+            task.Status = "failed"
+        } else {
+            task.Status = "completed"
+            task.AudioData = audioData // 假设 TTSTask 结构体有 AudioData 字段
+        }
+    } else {
+        task.Status = "failed"
+    }
+
+    s.queue.Push(task) // 更新最终状态
+}
+
+func (s *TTSService) GetTask(id string) (*models.TTSTask, error) {
+    tasks, err := s.queue.List()
+    if err != nil {
+        return nil, err
+    }
+
+    for _, t := range tasks {
+        if ttsTask, ok := t.(*models.TTSTask); ok && ttsTask.ID == id {
+            return ttsTask, nil
+        }
+    }
+
+    return nil, nil // 任务未找到
 }
 
 func (s *TTSService) ListTasks() ([]*models.TTSTask, error) {
-	taskIDs, err := s.redisClient.LRange(s.ctx, "tts_task_queue", 0, -1).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	var tasks []*models.TTSTask
-	for _, taskID := range taskIDs {
-		task, err := s.GetTask(taskID)
-		if err != nil {
-			continue
-		}
-		tasks = append(tasks, task)
-	}
-
-	return tasks, nil
+    tasks, err := s.taskQueue.List()
+    if err != nil {
+        return nil, err
+    }
+    ttsTasks := make([]*models.TTSTask, 0, len(tasks))
+    for _, task := range tasks {
+        if ttsTask, ok := task.(*models.TTSTask); ok {
+            ttsTasks = append(ttsTasks, ttsTask)
+        }
+    }
+    return ttsTasks, nil
 }
