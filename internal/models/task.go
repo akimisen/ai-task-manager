@@ -21,7 +21,6 @@ type TTSTask struct {
 	Type   TaskType
 	Status string
 	Text   string
-	GPT
 }
 
 // type ImageGenTask struct {
