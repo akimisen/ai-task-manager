@@ -1,10 +1,12 @@
-package models
+package model
+
+import "time"
 
 type TaskType string
 
 const (
 	TaskTypeTTS      TaskType = "tts"
-	TaskTypeImageGen TaskType = "image_gen"
+	TaskTypeImageGen TaskType = "imagen"
 )
 
 type Task interface {
@@ -17,13 +19,18 @@ type Task interface {
 
 // 具体任务类型的实现
 type TTSTask struct {
-	ID     string
-	Type   TaskType
-	Status string
-	Text   string
+	ID        string
+	Type      TaskType
+	Status    string
+	Text      string
+	AudioData []byte
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    string // 添加用户关联
+	Error     string // 用于存储错误信息
 }
 
-// type ImageGenTask struct {
+// type ImagenTask struct {
 //     ID     string
 //     Type   TaskType
 //     Status string

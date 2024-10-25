@@ -1,8 +1,8 @@
-package services
+package service
 
 import (
 	"ai-task-manager/internal/models"
-	"ai-task-manager/internal/queue"
+	"ai-task-manager/pkg/queue"
 	"bytes"
 	"encoding/json"
 	"io"

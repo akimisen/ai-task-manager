@@ -1,0 +1,17 @@
+rabbitmq:
+  url: "amqp://guest:guest@localhost:5672/"
+server:
+  address: ":8080"
+database:
+  mysql:
+    user: "root"
+    password: "password"
+    host: "localhost"
+    port: 3306
+    dbname: "tts_service"
+  redis:
+    addr: "localhost:6379"
+auth:
+  jwt:
+    secret: "your_secret_key"  # 应该从环境变量读取
+    expiration: 3600

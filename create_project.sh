@@ -9,7 +9,7 @@ mkdir -p cmd/server
 mkdir -p internal/api/handlers
 mkdir -p internal/config
 mkdir -p internal/models
-mkdir -p internal/services
+mkdir -p internal/service
 mkdir -p internal/queue
 mkdir -p internal/clients
 mkdir -p pkg/logger
@@ -29,10 +29,10 @@ touch internal/models/task.go
 touch internal/models/tts_task.go
 touch internal/models/image_task.go
 touch internal/models/video_task.go
-touch internal/services/task_service.go
-touch internal/services/tts_service.go
-touch internal/services/image_service.go
-touch internal/services/video_service.go
+touch internal/service/task_service.go
+touch internal/service/tts_service.go
+touch internal/service/image_service.go
+touch internal/service/video_service.go
 touch internal/queue/task_queue.go
 touch internal/clients/tts_client.go
 touch internal/clients/image_client.go
